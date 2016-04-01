@@ -48,6 +48,9 @@ public class Defaults {
     /** Buffer size, in bytes, used whenever reading/writing files or streams.  Default = 128k. */
     public static final int BUFFER_SIZE;
 
+    /** The output format of the flag field when writing SAM text.  Ignored for reading SAM text. */
+    public static final SamFlagField SAM_FLAG_FIELD_FORMAT;
+
     /**
      * Even if BUFFER_SIZE is 0, this is guaranteed to be non-zero.  If BUFFER_SIZE is non-zero,
      * this == BUFFER_SIZE
@@ -115,6 +118,7 @@ public class Defaults {
         USE_CRAM_REF_DOWNLOAD = getBooleanProperty("use_cram_ref_download", false);
         EBI_REFERENCE_SEVICE_URL_MASK = "http://www.ebi.ac.uk/ena/cram/md5/%s";
         CUSTOM_READER_FACTORY = getStringProperty("custom_reader", "");
+        SAM_FLAG_FIELD_FORMAT = SamFlagField.DEFAULT;
     }
 
     /**

@@ -28,10 +28,12 @@ import htsjdk.samtools.util.StringUtil;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * this class enables creation of a SAMRecord object from a String in SAM text format.
+ * This class enables creation of a SAMRecord object from a String in SAM text format.  The SAM flag field will be inferred
+ * for each record separately, unless the expected format is set using `withSamFlagField`.
  */
 public class SAMLineParser {
 
@@ -50,10 +52,6 @@ public class SAMLineParser {
 
     private static final int NUM_REQUIRED_FIELDS = 11;
 
-    // Read string must contain only these characters
-    private static final Pattern VALID_BASES = Pattern
-            .compile("^[acmgrsvtwyhkdbnACMGRSVTWYHKDBN.=]+$");
-
     /**
      * Allocate this once rather than for every line as a performance
      * optimization. The size is arbitrary -- merely large enough to handle the
@@ -69,6 +67,7 @@ public class SAMLineParser {
     private final ValidationStringency validationStringency;
     private final SAMFileHeader mFileHeader;
     private final File mFile;
+    private Optional<SamFlagField> samFlagField = Optional.empty();
 
     private final TextTagCodec tagCodec = new TextTagCodec();
 
@@ -160,6 +159,14 @@ public class SAMLineParser {
         return this.validationStringency;
     }
 
+    /**
+     * Sets the expected SAM flag type expected for all records.
+     */
+    public SAMLineParser withSamFlagField(final SamFlagField samFlagField) {
+        this.samFlagField = Optional.of(samFlagField);
+        return this;
+    }
+
     private int parseInt(final String s, final String fieldName) {
         final int ret;
         try {
@@ -168,6 +175,21 @@ public class SAMLineParser {
             throw reportFatalErrorParsingLine("Non-numeric value in "
                     + fieldName + " column");
         }
+        return ret;
+    }
+    
+    private int parseFlag(final String s, final String fieldName) {
+        final int ret;
+        final SamFlagField samFlagField = this.samFlagField.orElse(SamFlagField.getSamFlagField(s));
+        try {
+            ret = samFlagField.parse(s);
+        } catch (NumberFormatException e) {
+            throw reportFatalErrorParsingLine("Non-numeric value in "
+                    + fieldName + " column");
+        } catch (SAMFormatException e) {
+            throw reportFatalErrorParsingLine("Error in " + fieldName + " column: " + e.getMessage(), e);
+        }
+        
         return ret;
     }
 
@@ -208,11 +230,10 @@ public class SAMLineParser {
      */
     public SAMRecord parseLine(final String line, final int lineNumber) {
 
-        final String mCurrentLine = line;
         this.currentLineNumber = lineNumber;
         this.currentLine = line;
 
-        final int numFields = StringUtil.split(mCurrentLine, mFields, '\t');
+        final int numFields = StringUtil.split(line, mFields, '\t');
         if (numFields < NUM_REQUIRED_FIELDS) {
             throw reportFatalErrorParsingLine("Not enough fields");
         }
@@ -232,7 +253,7 @@ public class SAMLineParser {
         samRecord.setHeader(this.mFileHeader);
         samRecord.setReadName(mFields[QNAME_COL]);
 
-        final int flags = parseInt(mFields[FLAG_COL], "FLAG");
+        final int flags = parseFlag(mFields[FLAG_COL], "FLAG");
         samRecord.setFlags(flags);
 
         String rname = mFields[RNAME_COL];
@@ -430,6 +451,10 @@ public class SAMLineParser {
 
     private RuntimeException reportFatalErrorParsingLine(final String reason) {
         return new SAMFormatException(makeErrorString(reason));
+    }
+
+    private RuntimeException reportFatalErrorParsingLine(final String reason, final Throwable throwable) {
+        return new SAMFormatException(makeErrorString(reason), throwable);
     }
 
     private void reportErrorParsingLine(final String reason) {
