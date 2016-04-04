@@ -180,9 +180,10 @@ public class SAMFileWriterFactory implements Cloneable {
 
     /**
      * Set the flag output format only when writing text.
-     * Default value: [[htsjdk.samtools.SAMTextWriter.samFlagFieldOutput.DEFAULT]]
+     * Default value: [[htsjdk.samtools.SAMTextWriter.samFlagFieldOutput.DECIMAL]]
      */
     public SAMFileWriterFactory setSamFlagFieldOutput(final SamFlagField samFlagFieldOutput) {
+        if (samFlagFieldOutput == null) throw new IllegalArgumentException("Sam flag field was null");
         this.samFlagFieldOutput = samFlagFieldOutput;
         return this;
     }
@@ -251,7 +252,7 @@ public class SAMFileWriterFactory implements Cloneable {
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
         /**
          * Use the value specified from Defaults.SAM_FLAG_FIELD_FORMAT when samFlagFieldOutput value has not been set.  This should
-         * be SamFlagField.DEFAULT when the user has not set Defaults.SAM_FLAG_FIELD_FORMAT.
+         * be SamFlagField.DECIMAL when the user has not set Defaults.SAM_FLAG_FIELD_FORMAT.
          */
         if (samFlagFieldOutput == SamFlagField.NONE) {
             samFlagFieldOutput = Defaults.SAM_FLAG_FIELD_FORMAT;
@@ -286,7 +287,7 @@ public class SAMFileWriterFactory implements Cloneable {
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final OutputStream stream) {
         /**
          * Use the value specified from Defaults.SAM_FLAG_FIELD_FORMAT when samFlagFieldOutput value has not been set.  This should
-         * be samFlagFieldOutput.DEFAULT when the user has not set Defaults.SAM_FLAG_FIELD_FORMAT.
+         * be samFlagFieldOutput.DECIMAL when the user has not set Defaults.SAM_FLAG_FIELD_FORMAT.
          */
         if (samFlagFieldOutput == SamFlagField.NONE) {
             samFlagFieldOutput = Defaults.SAM_FLAG_FIELD_FORMAT;

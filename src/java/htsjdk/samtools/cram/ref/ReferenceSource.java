@@ -200,7 +200,7 @@ public class ReferenceSource {
 
     byte[] findBasesByMD5(final String md5) throws
             IOException {
-        final String url = String.format(Defaults.EBI_REFERENCE_SEVICE_URL_MASK, md5);
+        final String url = String.format(Defaults.EBI_REFERENCE_SERVICE_URL_MASK, md5);
 
         for (int i = 0; i < downloadTriesBeforeFailing; i++) {
             final InputStream is = new URL(url).openStream();

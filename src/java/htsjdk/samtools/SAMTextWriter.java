@@ -52,7 +52,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param out Writer.
      */
     public SAMTextWriter(final Writer out) {
-        this(out, SamFlagField.DEFAULT);
+        this(out, SamFlagField.DECIMAL);
     }
 
     /**
@@ -60,7 +60,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param file Where to write the output.
      */
     public SAMTextWriter(final File file) {
-        this(file, SamFlagField.DEFAULT);
+        this(file, SamFlagField.DECIMAL);
     }
 
     /**
@@ -76,7 +76,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param stream Need not be buffered because this class provides buffering. 
      */
     public SAMTextWriter(final OutputStream stream) {
-        this(stream, SamFlagField.DEFAULT);
+        this(stream, SamFlagField.DECIMAL);
     }
 
     /**
@@ -84,6 +84,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param out Writer.
      */
     public SAMTextWriter(final Writer out, final SamFlagField samFlagFieldOutput) {
+        if (samFlagFieldOutput == null) throw new IllegalArgumentException("Sam flag field was null");
         this.out = out;
         this.file = null;
         this.samFlagFieldOutput = samFlagFieldOutput;
@@ -94,6 +95,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param file Where to write the output.
      */
     public SAMTextWriter(final File file, final SamFlagField samFlagFieldOutput) {
+        if (samFlagFieldOutput == null) throw new IllegalArgumentException("Sam flag field was null");
         try {
             this.file = file;
             this.out = new AsciiWriter(new FileOutputStream(file));
@@ -109,6 +111,7 @@ public class SAMTextWriter extends SAMFileWriterImpl {
      * @param stream Need not be buffered because this class provides buffering.
      */
     public SAMTextWriter(final OutputStream stream, final SamFlagField samFlagFieldOutput) {
+        if (samFlagFieldOutput == null) throw new IllegalArgumentException("Sam flag field was null");
         this.file = null;
         this.out = new AsciiWriter(stream);
         this.samFlagFieldOutput = samFlagFieldOutput;

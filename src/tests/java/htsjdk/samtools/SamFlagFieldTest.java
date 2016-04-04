@@ -26,20 +26,20 @@ public class SamFlagFieldTest {
     
     @Test
     public void testFlagTypesParsing() {
-        Assert.assertEquals(SamFlagField.getSamFlagField("0"), SamFlagField.DEFAULT);
-        Assert.assertEquals(SamFlagField.getSamFlagField("1234"), SamFlagField.DEFAULT);
-        Assert.assertEquals(SamFlagField.getSamFlagField("0xDOESNOTMATTER"), SamFlagField.HEXADECIMAL);
-        Assert.assertEquals(SamFlagField.getSamFlagField("0x"), SamFlagField.HEXADECIMAL);
-        Assert.assertEquals(SamFlagField.getSamFlagField("0[^x]DOESNOTMATTER"), SamFlagField.OCTAL);
-        Assert.assertEquals(SamFlagField.getSamFlagField("0a"), SamFlagField.OCTAL);
-        Assert.assertEquals(SamFlagField.getSamFlagField("DOESNOTMATTER"), SamFlagField.STRING);
+        Assert.assertEquals(SamFlagField.of("0"), SamFlagField.DECIMAL);
+        Assert.assertEquals(SamFlagField.of("1234"), SamFlagField.DECIMAL);
+        Assert.assertEquals(SamFlagField.of("0xDOESNOTMATTER"), SamFlagField.HEXADECIMAL);
+        Assert.assertEquals(SamFlagField.of("0x"), SamFlagField.HEXADECIMAL);
+        Assert.assertEquals(SamFlagField.of("0[^x]DOESNOTMATTER"), SamFlagField.OCTAL);
+        Assert.assertEquals(SamFlagField.of("0a"), SamFlagField.OCTAL);
+        Assert.assertEquals(SamFlagField.of("DOESNOTMATTER"), SamFlagField.STRING);
     }
 
     @Test
     public void testFlagTypesFormatting() {
 
-        Assert.assertEquals(SamFlagField.DEFAULT.format(1), "1");
-        Assert.assertEquals(SamFlagField.DEFAULT.format(124), "124");
+        Assert.assertEquals(SamFlagField.DECIMAL.format(1), "1");
+        Assert.assertEquals(SamFlagField.DECIMAL.format(124), "124");
 
         Assert.assertEquals(SamFlagField.HEXADECIMAL.format(1), "0x1");
         Assert.assertEquals(SamFlagField.HEXADECIMAL.format(9), "0x9");

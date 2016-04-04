@@ -90,7 +90,7 @@ public class Defaults {
      * A mask (pattern) to use when building EBI reference service URL for a
      * given MD5 checksum. Must contain one and only one string placeholder.
      */
-    public static final String EBI_REFERENCE_SEVICE_URL_MASK;
+    public static final String EBI_REFERENCE_SERVICE_URL_MASK;
 
 
     static {
@@ -116,9 +116,9 @@ public class Defaults {
         }
         REFERENCE_FASTA = getFileProperty("reference_fasta", null);
         USE_CRAM_REF_DOWNLOAD = getBooleanProperty("use_cram_ref_download", false);
-        EBI_REFERENCE_SEVICE_URL_MASK = "http://www.ebi.ac.uk/ena/cram/md5/%s";
+        EBI_REFERENCE_SERVICE_URL_MASK = "http://www.ebi.ac.uk/ena/cram/md5/%s";
         CUSTOM_READER_FACTORY = getStringProperty("custom_reader", "");
-        SAM_FLAG_FIELD_FORMAT = SamFlagField.DEFAULT;
+        SAM_FLAG_FIELD_FORMAT = SamFlagField.valueOf(getStringProperty("sam_flag_field_format", SamFlagField.DECIMAL.name()));
     }
 
     /**
@@ -140,8 +140,9 @@ public class Defaults {
         result.put("NON_ZERO_BUFFER_SIZE", NON_ZERO_BUFFER_SIZE);
         result.put("REFERENCE_FASTA", REFERENCE_FASTA);
         result.put("USE_CRAM_REF_DOWNLOAD", USE_CRAM_REF_DOWNLOAD);
-        result.put("EBI_REFERENCE_SEVICE_URL_MASK", EBI_REFERENCE_SEVICE_URL_MASK);
+        result.put("EBI_REFERENCE_SERVICE_URL_MASK", EBI_REFERENCE_SERVICE_URL_MASK);
         result.put("CUSTOM_READER_FACTORY", CUSTOM_READER_FACTORY);
+        result.put("SAM_FLAG_FIELD_FORMAT", SAM_FLAG_FIELD_FORMAT);
         return Collections.unmodifiableSortedMap(result);
     }
 

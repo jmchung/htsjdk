@@ -29,7 +29,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * This class enables creation of a SAMRecord object from a String in SAM text format.  The SAM flag field will be inferred
@@ -163,6 +162,7 @@ public class SAMLineParser {
      * Sets the expected SAM flag type expected for all records.
      */
     public SAMLineParser withSamFlagField(final SamFlagField samFlagField) {
+        if (samFlagField == null) throw new IllegalArgumentException("Sam flag field was null");
         this.samFlagField = Optional.of(samFlagField);
         return this;
     }
@@ -172,25 +172,20 @@ public class SAMLineParser {
         try {
             ret = Integer.parseInt(s);
         } catch (NumberFormatException e) {
-            throw reportFatalErrorParsingLine("Non-numeric value in "
-                    + fieldName + " column");
+            throw reportFatalErrorParsingLine("Non-numeric value in " + fieldName + " column");
         }
         return ret;
     }
     
     private int parseFlag(final String s, final String fieldName) {
-        final int ret;
-        final SamFlagField samFlagField = this.samFlagField.orElse(SamFlagField.getSamFlagField(s));
+        final SamFlagField samFlagField = this.samFlagField.orElse(SamFlagField.of(s));
         try {
-            ret = samFlagField.parse(s);
+            return samFlagField.parse(s);
         } catch (NumberFormatException e) {
-            throw reportFatalErrorParsingLine("Non-numeric value in "
-                    + fieldName + " column");
+            throw reportFatalErrorParsingLine("Non-numeric value in " + fieldName + " column");
         } catch (SAMFormatException e) {
             throw reportFatalErrorParsingLine("Error in " + fieldName + " column: " + e.getMessage(), e);
         }
-        
-        return ret;
     }
 
     private void validateReferenceName(final String rname, final String fieldName) {

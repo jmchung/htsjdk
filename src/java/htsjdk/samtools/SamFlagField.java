@@ -27,7 +27,7 @@ public enum SamFlagField {
             throw new SAMException("NONE not allowed for the SamFlagField when reading the SAM flag field.");
         } 
     },
-    DEFAULT {
+    DECIMAL {
         @Override
         public String format(final int flag) {
             return Integer.toString(flag);
@@ -60,7 +60,7 @@ public enum SamFlagField {
     STRING {
         /*
         It is important that the first character of a string does not start with a digit, so we can
-        determine which format given an input flag value.  See getSamFlagField.
+        determine which format given an input flag value.  See of.
          */
         private static final String flag2CharTable = "pPuUrR12sxdS\0\0\0\0"; // when the bit is set
         private static final String notFlag2CharTable = "\0\0mMfF\0\0\0\0\0\0\0\0\0\0"; // when the bit is not set
@@ -119,12 +119,12 @@ public enum SamFlagField {
      * Returns the type of flag field for this string.  This does not guarantee it is of the flag field,
      * as it only checks the first two characters.
      */
-    public static SamFlagField getSamFlagField(final String s) {
+    public static SamFlagField of(final String s) {
         if (s.isEmpty()) throw new SAMFormatException("Could not determine flag field type; saw an empty flag field");
         else if (s.startsWith("0x")) return HEXADECIMAL;
         else if (s.startsWith("0X")) return HEXADECIMAL;
         else if (s.startsWith("0") && s.length() > 1) return OCTAL; // not supported
-        else if (Character.isDigit(s.charAt(0))) return DEFAULT;
+        else if (Character.isDigit(s.charAt(0))) return DECIMAL;
         else return STRING;
     }
 }

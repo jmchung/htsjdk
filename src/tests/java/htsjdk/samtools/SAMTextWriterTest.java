@@ -53,7 +53,7 @@ public class SAMTextWriterTest {
 
     @Test
     public void testBasic() throws Exception {
-        doTest(SamFlagField.DEFAULT);
+        doTest(SamFlagField.DECIMAL);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class SAMTextWriterTest {
     }
 
     private void doTest(final SAMRecordSetBuilder recordSetBuilder) throws Exception{
-        doTest(recordSetBuilder, SamFlagField.DEFAULT);
+        doTest(recordSetBuilder, SamFlagField.DECIMAL);
     }
 
     private void doTest(final SamFlagField samFlagField) throws Exception {
