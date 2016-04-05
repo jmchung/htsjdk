@@ -71,7 +71,7 @@ public class SAMTextWriterTest {
         doTest(SamFlagField.STRING);
     }
 
-    private void doTest(final SAMRecordSetBuilder recordSetBuilder) throws Exception{
+    private void doTest(final SAMRecordSetBuilder recordSetBuilder) throws Exception {
         doTest(recordSetBuilder, SamFlagField.DECIMAL);
     }
 
@@ -79,7 +79,7 @@ public class SAMTextWriterTest {
         doTest(getSAMReader(true, SAMFileHeader.SortOrder.coordinate), samFlagField);
     }
 
-    private void doTest(final SAMRecordSetBuilder recordSetBuilder, final SamFlagField samFlagField) throws Exception{
+    private void doTest(final SAMRecordSetBuilder recordSetBuilder, final SamFlagField samFlagField) throws Exception {
         SamReader inputSAM = recordSetBuilder.getSamReader();
         final File samFile = File.createTempFile("tmp.", ".sam");
         samFile.deleteOnExit();

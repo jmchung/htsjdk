@@ -206,7 +206,6 @@ public abstract class SamReaderFactory {
             this.validationStringency = validationStringency;
             return this;
         }
-        
 
         @Override
         public SamReader open(final SamInputResource resource) {
