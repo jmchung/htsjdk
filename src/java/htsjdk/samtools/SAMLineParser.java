@@ -154,7 +154,6 @@ public class SAMLineParser {
      * @return validation stringency
      */
     public ValidationStringency getValidationStringency() {
-
         return this.validationStringency;
     }
 
@@ -178,9 +177,8 @@ public class SAMLineParser {
     }
     
     private int parseFlag(final String s, final String fieldName) {
-        final SamFlagField samFlagField = this.samFlagField.orElse(SamFlagField.of(s));
         try {
-            return samFlagField.parse(s);
+            return samFlagField.isPresent() ? samFlagField.get().parse(s) : SamFlagField.parseDefault(s);
         } catch (NumberFormatException e) {
             throw reportFatalErrorParsingLine("Non-numeric value in " + fieldName + " column");
         } catch (SAMFormatException e) {

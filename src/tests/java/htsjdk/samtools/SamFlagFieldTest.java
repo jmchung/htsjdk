@@ -1,6 +1,7 @@
 package htsjdk.samtools;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -10,20 +11,90 @@ public class SamFlagFieldTest {
 
     @Test
     public void testAllFlags() {
-        final int flagAsInteger = SamFlagField.STRING.parse(SamFlagField.STRING.getFlag2CharTable());
+        int flagAsInteger = 0;
+        for (final SAMFlag samFlag : SAMFlag.values()) {
+            flagAsInteger |= samFlag.flag;
+        }
         final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
-        
-        Assert.assertEquals(flagAsString.compareTo(SamFlagField.STRING.getFlag2CharTable().replace("\0", "")), 0);
+
+        Assert.assertEquals(flagAsString, "urURpP12sSqd");
     }
 
     @Test
-    public void testNoFlags() {
-        final int flagAsInteger = SamFlagField.STRING.parse(SamFlagField.STRING.getNotFlag2CharTable());
+    public void testAllFlagsReverseOrder() {
+        int flagAsInteger = 0;
+        for (final SAMFlag samFlag : SAMFlag.values()) {
+            flagAsInteger |= samFlag.flag;
+        }
+        final String flagAsString = new StringBuilder("urURpP12sSqd").reverse().toString();
+
+        Assert.assertEquals(flagAsInteger, SamFlagField.STRING.parse(flagAsString));
+    }
+
+    @Test
+    public void testForwardStrandFlags() {
+        final int flagAsInteger = SamFlagField.STRING.parse("f");
         final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
 
-        Assert.assertEquals(flagAsString.compareTo(SamFlagField.STRING.getNotFlag2CharTable().replace("\0", "")), 0);
+        Assert.assertEquals(flagAsString, "mf");
     }
-    
+
+    @Test
+    public void testPairedForwardStrandFlags() {
+        final int flagAsInteger = SamFlagField.STRING.parse("mfMFp");
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mfMFp");
+    }
+
+    @Test
+    public void testMappedFlags() {
+        final int flagAsInteger = SamFlagField.STRING.parse("m");
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mf");
+    }
+
+    @Test
+    public void testPairedMappedFlags() {
+        final int flagAsInteger = SamFlagField.STRING.parse("pmM");
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mfMFp");
+    }
+
+    @Test
+    public void testMateMappedNotOnFragmentFlags() {
+        final int flagAsInteger = SAMFlag.MATE_UNMAPPED.flag;
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mf");
+    }
+
+    @Test
+    public void testMateMappedOnlyOnPairsFlags() {
+        final int flagAsInteger = SAMFlag.MATE_UNMAPPED.flag | SAMFlag.READ_PAIRED.flag;
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mfUFp");
+    }
+
+    @Test
+    public void testMateForwardStrandNotOnFragmentFlags() {
+        final int flagAsInteger = 0;
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mf");
+    }
+
+    @Test
+    public void testMateForwardStrandOnlyOnPairsFlags() {
+        final int flagAsInteger = SAMFlag.READ_PAIRED.flag;
+        final String flagAsString = SamFlagField.STRING.format(flagAsInteger);
+
+        Assert.assertEquals(flagAsString, "mfMFp");
+    }
+
     @Test
     public void testFlagTypesParsing() {
         Assert.assertEquals(SamFlagField.of("0"), SamFlagField.DECIMAL);
@@ -49,12 +120,17 @@ public class SamFlagFieldTest {
         Assert.assertEquals(SamFlagField.OCTAL.format(1), "01");
         Assert.assertEquals(SamFlagField.OCTAL.format(124), "0174");
 
-        Assert.assertEquals(SamFlagField.STRING.format(337), "pmMrF1s");
+        Assert.assertEquals(SamFlagField.STRING.format(337), "mrMFp1s");
     }
     
     @Test(expectedExceptions = SAMFormatException.class)
     public void testIllegalStringFlagCharacter(){
         SamFlagField.STRING.parse("HELLO WORLD");
+    }
+
+    @Test(expectedExceptions = SAMFormatException.class)
+    public void testIllegalHexadecimalFlagCharacter(){
+        SamFlagField.HEXADECIMAL.parse("HELLO WORLD");
     }
 
     @Test(expectedExceptions = SAMFormatException.class)

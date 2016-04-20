@@ -44,11 +44,11 @@ public enum SamFlagField {
     NONE {
         @Override
         public String format(final int flag) {
-            throw new SAMException("NONE not allowed for the SamFlagField when writing the SAM flag field.");
+            throw new SAMFormatException("NONE not allowed for the SamFlagField when writing the SAM flag field.");
         }
         @Override
-        public int parse(final String flag) {
-            throw new SAMException("NONE not allowed for the SamFlagField when reading the SAM flag field.");
+        protected int parseWithoutValidation(final String flag) {
+            throw new SAMFormatException("NONE not allowed for the SamFlagField when reading the SAM flag field.");
         } 
     },
     DECIMAL {
@@ -58,7 +58,9 @@ public enum SamFlagField {
         }
         /** Throws NumberFormatException if it can't parse the flag **/
         @Override
-        public int parse(final String flag) { return Integer.parseInt(flag); }
+        protected int parseWithoutValidation(final String flag) {
+            return Integer.parseInt(flag);
+        }
     },
     HEXADECIMAL {
         @Override
@@ -66,9 +68,8 @@ public enum SamFlagField {
             return String.format("%#x", flag);
         }
         @Override
-        public int parse(final String flag) {
-            if (flag.startsWith("0x")) return Integer.valueOf(flag.substring(2), 16);
-            else return Integer.valueOf(flag, 16); // this really should not be supported, it should always have 0x..
+        protected int parseWithoutValidation(final String flag) {
+            return Integer.valueOf(flag.substring(2), 16);
         }
     },
     OCTAL {
@@ -77,7 +78,7 @@ public enum SamFlagField {
             return String.format("%#o", flag);
         }
         @Override
-        public int parse(final String flag) {
+        protected int parseWithoutValidation(final String flag) {
             return Integer.valueOf(flag, 8);
         }
     },
@@ -86,58 +87,102 @@ public enum SamFlagField {
         It is important that the first character of a string does not start with a digit, so we can
         determine which format given an input flag value.  See of.
          */
-        private static final String flag2CharTable = "pPuUrR12sxdS\0\0\0\0"; // when the bit is set
-        private static final String notFlag2CharTable = "\0\0mMfF\0\0\0\0\0\0\0\0\0\0"; // when the bit is not set
-
-        private String getStringFlags(final int flag) {
-            String s = "";
-            for (int i = 0; i < 16; ++i) {
-                if ((flag & 1 << i) != 0) { // the bit is set
-                    if ('\0' != flag2CharTable.charAt(i)) s += flag2CharTable.charAt(i);
-                }
-                else { // the bit is not set
-                    if ('\0' != notFlag2CharTable.charAt(i)) s += notFlag2CharTable.charAt(i);
-                }
-            }
-            return s;
-        }
-
-        private int parseStringFlags(final String flag) {
-            int ret = 0;
-            for (int i = 0; i < flag.length(); i++) {
-                final int idx = flag2CharTable.indexOf(flag.charAt(i));
-                if (-1 != idx) {
-                    ret = ret | (1 << idx);
-                }
-                else if (-1 == notFlag2CharTable.indexOf(flag.charAt(i))) {
-                    throw new SAMFormatException("Unrecognized character: " + flag.charAt(i));
-                }
-            }
-            return ret;
-        }
-
-        // For testing
-        @Override
-        public String getFlag2CharTable() { return flag2CharTable; }
-        @Override
-        public String getNotFlag2CharTable() { return notFlag2CharTable; }
 
         @Override
         public String format(final int flag) {
-            return getStringFlags(flag);
+            // Adapted from the the implementation here:
+            //  https://github.com/jmarshall/cansam/blob/master/lib/alignment.cpp
+            // The main difference is no mate flags will be printed unless the read paired flag is set.
+
+            final StringBuilder value = new StringBuilder();
+
+            if ((flag & SAMFlag.READ_UNMAPPED.flag) != 0)                   value.append('u');
+            else                                                            value.append('m');
+            if ((flag & SAMFlag.READ_REVERSE_STRAND.flag) != 0)             value.append('r');
+            else if ((flag & SAMFlag.READ_UNMAPPED.flag) == 0)              value.append('f');
+
+            if ((flag & SAMFlag.READ_PAIRED.flag) != 0) {
+                if ((flag & SAMFlag.MATE_UNMAPPED.flag) != 0)               value.append('U');
+                else
+                    value.append('M');
+                if ((flag & SAMFlag.MATE_REVERSE_STRAND.flag) != 0)         value.append('R');
+                else value.append('F');
+
+                                                                            value.append('p');
+                if ((flag & SAMFlag.PROPER_PAIR.flag) != 0)                 value.append('P');
+                if ((flag & SAMFlag.FIRST_OF_PAIR.flag) != 0)               value.append('1');
+                if ((flag & SAMFlag.SECOND_OF_PAIR.flag) != 0)              value.append('2');
+            }
+
+            if ((flag & SAMFlag.NOT_PRIMARY_ALIGNMENT.flag) != 0)           value.append('s');
+            if ((flag & SAMFlag.SUPPLEMENTARY_ALIGNMENT.flag) != 0)         value.append('S');
+            if ((flag & SAMFlag.READ_FAILS_VENDOR_QUALITY_CHECK.flag) != 0) value.append('q');
+            if ((flag & SAMFlag.DUPLICATE_READ.flag) != 0)                  value.append('d');
+
+            return value.toString();
         }
 
         @Override
-        public int parse(final String flag) {
-            return parseStringFlags(flag);
+        protected int parseWithoutValidation(final String flag) {
+            SamFlagField.validate(flag, STRING);
+
+            // Adapted from the the implementation here:
+            //   https://github.com/jmarshall/cansam/blob/master/lib/alignment.cpp
+
+            int value = 0;
+
+            for (int i = 0; i < flag.length(); i++) {
+                switch (flag.charAt(i)) {
+                    case 'p':  value |= SAMFlag.READ_PAIRED.flag;  break;
+                    case 'P':  value |= SAMFlag.PROPER_PAIR.flag;  break;
+                    case 'u':  value |= SAMFlag.READ_UNMAPPED.flag;  break;
+                    case 'U':  value |= SAMFlag.MATE_UNMAPPED.flag;  break;
+                    case 'r':  value |= SAMFlag.READ_REVERSE_STRAND.flag;  break;
+                    case 'R':  value |= SAMFlag.MATE_REVERSE_STRAND.flag;  break;
+                    case '1':  value |= SAMFlag.FIRST_OF_PAIR.flag;  break;
+                    case '2':  value |= SAMFlag.SECOND_OF_PAIR.flag;  break;
+                    case 's':  value |= SAMFlag.NOT_PRIMARY_ALIGNMENT.flag;  break;
+                    case 'q':  value |= SAMFlag.READ_FAILS_VENDOR_QUALITY_CHECK.flag;  break;
+                    case 'd':  value |= SAMFlag.DUPLICATE_READ.flag;  break;
+                    case 'S':  value |= SAMFlag.SUPPLEMENTARY_ALIGNMENT.flag;  break;
+                    case 'f':
+                    case 'F':
+                    case 'm':
+                    case 'M':
+                    case '_':
+                        break;
+                    default:
+                        throw new SAMFormatException("Unknown flag character '" + flag.charAt(i) + "' in flag '" + flag + "'");
+                }
+            }
+
+            return value;
         }
     };
-    abstract public String format(final int flag);
-    abstract public int parse(final String flag);
 
-    // For testing
-    public String getFlag2CharTable() { return null; }
-    public String getNotFlag2CharTable() { return null; }
+    /** Returns the string associated with this flag field. */
+    abstract public String format(final int flag);
+
+    /** Parses the flag.  Validates that the flag is of the correct type. */
+    public final int parse(final String flag) {
+        return parse(flag, true);
+    }
+
+    /** Infers the format from the flag string and parses the flag. */
+    public static int parseDefault(final String flag) {
+        return SamFlagField.of(flag).parse(flag, false);
+    }
+
+    /** Performs the actual parsing based on the radix.  No validation that the flag is of the correct radix
+     * should be performed.
+     */
+    abstract protected int parseWithoutValidation(final String flag);
+
+    /** Parses the flag.  Performs optional validation that the flag is of the correct type. */
+    private int parse(final String flag, final boolean withValidation) {
+        if (withValidation) SamFlagField.validate(flag, this);
+        return parseWithoutValidation(flag);
+    }
 
     /**
      * Returns the type of flag field for this string.  This does not guarantee it is of the flag field,
@@ -147,8 +192,15 @@ public enum SamFlagField {
         if (s.isEmpty()) throw new SAMFormatException("Could not determine flag field type; saw an empty flag field");
         else if (s.startsWith("0x")) return HEXADECIMAL;
         else if (s.startsWith("0X")) return HEXADECIMAL;
-        else if (s.startsWith("0") && s.length() > 1) return OCTAL; // not supported
+        else if (s.startsWith("0") && s.length() > 1) return OCTAL;
         else if (Character.isDigit(s.charAt(0))) return DECIMAL;
         else return STRING;
+    }
+
+    private static void validate(final String flag, final SamFlagField expectedField) {
+        final SamFlagField actualField = SamFlagField.of(flag);
+        if (actualField != expectedField) {
+            throw new SAMFormatException(expectedField.name() + " sam flag must start with [1-9] but found '" + flag + "' (" + actualField.name() + ")");
+        }
     }
 }
