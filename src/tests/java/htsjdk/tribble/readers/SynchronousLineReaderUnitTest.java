@@ -12,11 +12,11 @@ import java.io.InputStreamReader;
 /**
  * @author mccowan
  */
-public class LineReaderUtilTest {
+public class SynchronousLineReaderUnitTest {
     @Test
     public void testLineReaderIterator() throws Exception {
         final File filePath = new File(TestUtils.DATA_DIR + "gwas/smallp.gwas");
-        final LineIterator lineIterator = new LineIteratorImpl(LineReaderUtil.fromBufferedStream(new PositionalBufferedStream(new FileInputStream(filePath))));
+        final LineIterator lineIterator = new LineIteratorImpl(new SynchronousLineReader(new PositionalBufferedStream(new FileInputStream(filePath))));
         final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
 
         while (lineIterator.hasNext()) {
