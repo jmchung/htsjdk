@@ -178,7 +178,7 @@ public class VariantContextBuilder {
     }
 
     /**
-     * Tells this builder to use this map of attributes alleles for the resulting <code>VariantContext</code>
+     * Tells this builder to use this map of attributes for the resulting <code>VariantContext</code>
      *
      * Attributes can be <code>null</code> -&gt; meaning there are no attributes.  After
      * calling this routine the builder assumes it can modify the attributes
@@ -189,14 +189,9 @@ public class VariantContextBuilder {
      *
      * @param attributes
      */
-    public VariantContextBuilder attributes(final Map<String, Object> attributes) {
-        if (attributes != null) {
-            this.attributes = attributes;
-        }
-        else {
-            this.attributes = new HashMap<String, Object>();
-        }
-
+    public VariantContextBuilder attributes(final Map<String, ?> attributes) {
+        this.attributes = new HashMap<>();
+        if (attributes != null) this.attributes.putAll(attributes);
         this.attributesCanBeModified = true;
         return this;
     }
